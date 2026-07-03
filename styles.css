@@ -1574,7 +1574,7 @@ body {
 @page {
     size: A4;
     margin: 18mm 14mm 22mm 14mm;
-    @bottom-left { content: "ʚଓ © 2026 Claudia Toth"; font-size: 9pt; color: #065f46; }
+    @bottom-left { content: "© 2026 Claudia Toth"; font-size: 9pt; color: #065f46; }
     @bottom-right { content: "pag. " counter(page) " / " counter(pages); font-size: 9pt; color: #5A5147; }
 }
 
