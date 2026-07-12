@@ -55,7 +55,7 @@ function buildFlashcards() {
     container.innerHTML = `
         <div class="exercise-instruction">
             <strong>📇 ${flashcardsData.length} carduri pentru atelierul Pronominaladverbien.</strong><br>
-            Click pe card pentru traducere. Click pe 🔊 pentru pronunție (voce Hedda).
+            Click pe card pentru traducere. Click pe 🔊 pentru pronunție.
         </div>
         <div class="flashcard-counter" id="flashcard-counter">Card 1 / ${flashcardsData.length}</div>
         <div class="flashcard" id="flashcard" onclick="flipCard()">

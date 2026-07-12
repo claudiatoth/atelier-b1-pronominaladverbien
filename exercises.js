@@ -173,7 +173,7 @@ function checkEx3() {
 }
 
 // ============================================
-// EX 4: Diktat audio (Hedda)
+// EX 4: Diktat audio
 // ============================================
 const ex4Data = [
     { id: 'a', audio: 'audio/diktat-01.wav', text: 'Worauf wartest du?', accept: ['Worauf wartest du?'], ro: 'La ce aștepți? (lucru)' },
@@ -197,7 +197,7 @@ function buildEx4() {
     const c = document.getElementById('ex4-container');
     if (!c) return;
     let html = `<div class="exercise-instruction">
-        <strong>🎧 Diktat — ascultă și scrie propoziția (voce Hedda).</strong><br>
+        <strong>🎧 Diktat — ascultă și scrie propoziția.</strong><br>
         <em>Sfat:</em> atenție la wo-/da- + prepoziție și la lucru (darauf) vs. persoană (auf wen).
     </div>`;
     ex4Data.forEach((it, i) => {

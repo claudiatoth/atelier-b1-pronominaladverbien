@@ -79,7 +79,7 @@
             html += fillInBlock('Übung 3 — regula lui -r- 🔤', 'Prepoziție cu VOCALĂ → cu -r- (worauf, daran); cu CONSOANĂ → fără -r- (womit, dafür).', ex3Data);
         }
         if (typeof ex4Data !== 'undefined') {
-            html += diktatBlock('Übung 4 — Diktat (Hörverstehen, voce Hedda)', 'Atenție la wo-/da- + prepoziție și la lucru (darauf) vs. persoană (auf wen).', ex4Data);
+            html += diktatBlock('Übung 4 — Diktat (Hörverstehen)', 'Atenție la wo-/da- + prepoziție și la lucru (darauf) vs. persoană (auf wen).', ex4Data);
         }
         if (typeof ex5Data !== 'undefined') {
             html += translateBlock('Übung 5 — Traducere RO → DE', 'Mix: da(r)- · wo(r)- · lucru vs. persoană (worauf ≠ auf wen).', ex5Data);
