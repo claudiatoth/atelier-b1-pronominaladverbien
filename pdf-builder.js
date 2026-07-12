@@ -9,7 +9,7 @@
     function buildPDF() {
         const root = document.getElementById('pdf-content');
         if (!root) return;
-        root.innerHTML = buildCast() + buildTheory() + buildExercises() + buildFlashcards() + buildVerbs();
+        root.innerHTML = buildCast() + buildTheory() + buildExercises() + buildFlashcards() + buildVerbs() + buildSolutions();
     }
 
     function buildCast() {
@@ -40,34 +40,35 @@
     }
 
     function fillInBlock(title, instruction, data) {
-        let h = `<div class="ex-block"><h3>${title}</h3><div class="instruction">${instruction}</div><div class="rezolvare-banner">✓ Rezolvare</div>`;
+        let h = `<div class="ex-block"><h3>${title}</h3><div class="instruction">${instruction}</div>`;
         data.forEach((it, i) => {
-            const filled = it.sentence.replace(/_{2,}/g, `<strong style="color:#047857">${it.correct}</strong>`);
-            h += `<div class="ex-item"><span class="ex-num">${i + 1}</span><div class="ex-body"><div class="ex-q">${filled}</div>${it.translation ? `<div class="ex-explanation">🇷🇴 ${it.translation}</div>` : ''}</div></div>`;
+            const blanked = it.sentence.replace(/_{2,}/g, `<span class="fill-blank"></span>`);
+            h += `<div class="ex-item"><span class="ex-num">${i + 1}</span><div class="ex-body"><div class="ex-q">${blanked}</div>${it.translation ? `<div class="ex-explanation">🇷🇴 ${it.translation}</div>` : ''}</div></div>`;
         });
         return h + `</div>`;
     }
 
     function translateBlock(title, instruction, data) {
-        let h = `<div class="ex-block"><h3>${title}</h3><div class="instruction">${instruction}</div><div class="rezolvare-banner">✓ Rezolvare</div>
-            <table><thead><tr><th style="width:50%">🇷🇴 Română</th><th>🇩🇪 Germană</th></tr></thead><tbody>`;
+        let h = `<div class="ex-block"><h3>${title}</h3><div class="instruction">${instruction}</div>
+            <table class="match-table"><thead><tr><th style="width:50%">🇷🇴 Română</th><th>🇩🇪 Germană (scrie tu)</th></tr></thead><tbody>`;
         data.forEach(it => {
-            h += `<tr><td class="ro-text">${it.ro}</td><td class="verb">${it.correct}</td></tr>`;
+            h += `<tr><td class="ro-text">${it.ro}</td><td><div class="write-line"></div></td></tr>`;
         });
         h += `</tbody></table></div>`;
         return h;
     }
 
     function diktatBlock(title, instruction, data) {
-        let h = `<div class="ex-block"><h3>${title}</h3><div class="instruction">${instruction}</div><div class="rezolvare-banner">✓ Rezolvare</div>`;
+        let h = `<div class="ex-block"><h3>${title}</h3><div class="instruction">${instruction}</div>`;
         data.forEach((it, i) => {
-            h += `<div class="ex-item"><span class="ex-num">${i + 1}</span><div class="ex-body"><div class="ex-q"><strong style="color:#047857">${it.text}</strong></div><div class="ex-explanation">🇷🇴 ${it.ro}</div></div></div>`;
+            h += `<div class="ex-item"><span class="ex-num">${i + 1}</span><div class="ex-body"><div class="ex-q">🇷🇴 ${it.ro}</div><div class="write-line"></div></div></div>`;
         });
         return h + `</div>`;
     }
 
     function buildExercises() {
-        let html = `<h1 class="chapter new-section">📝 2. Exerciții — cu rezolvări complete</h1>`;
+        let html = `<h1 class="chapter new-section">📝 2. Exerciții — de rezolvat</h1>
+            <p class="ex-intro">✏️ Printează și rezolvă exercițiile de mai jos. <strong>Toate rezolvările sunt la finalul materialului</strong> (capitolul „✅ Soluții").</p>`;
         if (typeof ex1Data !== 'undefined') {
             html += fillInBlock('Übung 1 — da(r)- pentru lucruri 🧲', 'Înlocuiește prepoziție + das cu da(r)-. Vocală → dar- (darauf, daran) · consoană → da- (damit, dafür).', ex1Data);
         }
@@ -139,6 +140,38 @@
                 html += `</div>`;
             });
         }
+        return html;
+    }
+
+    // ============================================
+    // 5. SOLUȚII — toate rezolvările (la finalul PDF, model TV1)
+    // ============================================
+    function buildSolutions() {
+        let html = `<h1 class="chapter new-section">✅ 5. Soluții — toate rezolvările</h1>
+            <p class="ex-intro">Verifică-ți răspunsurile după ce ai rezolvat exercițiile din capitolul „📝 Exerciții".</p>`;
+        function solFill(title, data) {
+            let h = `<div class="ex-block"><h3>${title}</h3>`;
+            data.forEach((it, i) => {
+                const ctx = it.sentence.replace(/_{2,}/g, `[ ${it.correct} ]`);
+                h += `<div class="sol-item"><span class="sol-num">${i + 1}.</span> <strong>${it.correct}</strong> <span class="sol-ctx">(${ctx})</span></div>`;
+            });
+            return h + `</div>`;
+        }
+        function solTranslate(title, data) {
+            let h = `<div class="ex-block"><h3>${title}</h3>`;
+            data.forEach((it, i) => { h += `<div class="sol-item"><span class="sol-num">${i + 1}.</span> ${it.ro} → <strong>${it.correct}</strong></div>`; });
+            return h + `</div>`;
+        }
+        function solDiktat(title, data) {
+            let h = `<div class="ex-block"><h3>${title}</h3>`;
+            data.forEach((it, i) => { h += `<div class="sol-item"><span class="sol-num">${i + 1}.</span> <strong>${it.text}</strong> <span class="sol-ctx">🇷🇴 ${it.ro}</span></div>`; });
+            return h + `</div>`;
+        }
+        if (typeof ex1Data !== 'undefined') html += solFill('Übung 1 — da(r)- pentru lucruri', ex1Data);
+        if (typeof ex2Data !== 'undefined') html += solFill('Übung 2 — wo(r)- (întrebare pentru lucruri)', ex2Data);
+        if (typeof ex3Data !== 'undefined') html += solFill('Übung 3 — regula lui -r-', ex3Data);
+        if (typeof ex4Data !== 'undefined') html += solDiktat('Übung 4 — Diktat', ex4Data);
+        if (typeof ex5Data !== 'undefined') html += solTranslate('Übung 5 — Traducere RO → DE', ex5Data);
         return html;
     }
 })();
