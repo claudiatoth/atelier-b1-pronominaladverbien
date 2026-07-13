@@ -289,6 +289,12 @@ function checkEx5() {
     return { correct, total: ex5Data.length };
 }
 
+function resetEx1() { buildEx1(); const s = document.getElementById('score-1'); if (s) s.textContent = ''; }
+function resetEx2() { buildEx2(); const s = document.getElementById('score-2'); if (s) s.textContent = ''; }
+function resetEx3() { buildEx3(); const s = document.getElementById('score-3'); if (s) s.textContent = ''; }
+function resetEx4() { buildEx4(); const s = document.getElementById('score-4'); if (s) s.textContent = ''; }
+function resetEx5() { buildEx5(); const s = document.getElementById('score-5'); if (s) s.textContent = ''; }
+
 document.addEventListener('DOMContentLoaded', function () {
     buildEx1();
     buildEx2();
