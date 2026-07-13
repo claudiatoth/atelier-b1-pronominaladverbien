@@ -40,7 +40,7 @@ function buildEx1() {
             <div class="input-group">
                 <label>${it.sentence}</label>
                 <small style="color:#5A5147">💬 ${it.translation}</small>
-                <input type="text" id="ex1-${it.id}" placeholder="da- / dar- + prepoziție">
+                <input type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" id="ex1-${it.id}" placeholder="da- / dar- + prepoziție">
             </div>
             <div class="feedback" id="ex1-f${it.id}"></div>
         </div>`;
@@ -93,7 +93,7 @@ function buildEx2() {
             <div class="input-group">
                 <label>${it.sentence}</label>
                 <small style="color:#5A5147">💬 ${it.translation}</small>
-                <input type="text" id="ex2-${it.id}" placeholder="Wo- / Wor- + prepoziție">
+                <input type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" id="ex2-${it.id}" placeholder="Wo- / Wor- + prepoziție">
             </div>
             <div class="feedback" id="ex2-f${it.id}"></div>
         </div>`;
@@ -146,7 +146,7 @@ function buildEx3() {
             <div class="input-group">
                 <label>${it.sentence}</label>
                 <small style="color:#5A5147">💬 ${it.translation}</small>
-                <input type="text" id="ex3-${it.id}" placeholder="cuvântul format...">
+                <input type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" id="ex3-${it.id}" placeholder="cuvântul format...">
             </div>
             <div class="feedback" id="ex3-f${it.id}"></div>
         </div>`;
@@ -209,7 +209,7 @@ function buildEx4() {
                     <span style="margin-left:8px;">Propoziția ${i + 1} — scrie ce auzi:</span>
                 </label>
                 <audio id="diktat-audio-${it.id}" preload="none"><source src="${it.audio}" type="audio/wav"></audio>
-                <input type="text" id="ex4-${it.id}" placeholder="Scrie propoziția...">
+                <input type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" id="ex4-${it.id}" placeholder="Scrie propoziția...">
                 <small style="color:#5A5147">💬 ${it.ro}</small>
             </div>
             <div class="feedback" id="ex4-f${it.id}"></div>
@@ -263,7 +263,7 @@ function buildEx5() {
             <span class="exercise-number">${i + 1}</span>
             <div class="input-group">
                 <label>🇷🇴 ${it.ro}</label>
-                <input type="text" id="ex5-${it.id}" placeholder="Traducere în germană...">
+                <input type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" id="ex5-${it.id}" placeholder="Traducere în germană...">
             </div>
             <div class="feedback" id="ex5-f${it.id}"></div>
         </div>`;
