@@ -36,31 +36,10 @@ function openSection(index) {
 }
 
 // ============================================
-// AUDIO CONTROL - Play / Pause cu PĂSTRARE poziție + RESUME
-// localStorage per lecție × audio → cursantul reia de unde a rămas
-// chiar și după închiderea browser-ului
+// AUDIO CONTROL - player brandat: play/pause + restart + bara de progres (seek)
+// FARA reluare automata: la reincarcare porneste de la 0; pauza-continua in sesiune.
 // ============================================
 let currentAudioId = null;
-
-// Cheie localStorage per lecție + audio (window.location.pathname asigură scope per lecție)
-function audioPositionKey(audioId) {
-    return 'lesson-audio-pos::' + window.location.pathname + '::' + audioId;
-}
-
-function saveAudioPosition(audioId, time) {
-    try { localStorage.setItem(audioPositionKey(audioId), String(time)); } catch (e) { /* quota ok */ }
-}
-
-function loadAudioPosition(audioId) {
-    try {
-        const v = localStorage.getItem(audioPositionKey(audioId));
-        return v ? parseFloat(v) : 0;
-    } catch (e) { return 0; }
-}
-
-function clearAudioPosition(audioId) {
-    try { localStorage.removeItem(audioPositionKey(audioId)); } catch (e) { /* ok */ }
-}
 
 function formatAudioTime(seconds) {
     if (!isFinite(seconds) || seconds < 0) return '0:00';
@@ -69,107 +48,146 @@ function formatAudioTime(seconds) {
     return m + ':' + s;
 }
 
-function toggleAudio(event, audioId) {
-    event.stopPropagation();
+function pauseOtherAudio(audioId) {
+    if (currentAudioId && currentAudioId !== audioId) {
+        const prevAudio = document.getElementById(currentAudioId);
+        const prevBtn = document.getElementById('btn-' + currentAudioId);
+        if (prevAudio) prevAudio.pause();
+        if (prevBtn) prevBtn.textContent = '▶';
+    }
+}
 
+function toggleAudio(event, audioId) {
+    if (event) event.stopPropagation();
     const audio = document.getElementById(audioId);
     const btn = document.getElementById('btn-' + audioId);
     if (!audio || !btn) return;
 
-    // Dacă alt audio cântă, îl PAUZĂM (păstrăm poziția lui — nu mai resetăm)
-    if (currentAudioId && currentAudioId !== audioId) {
-        const prevAudio = document.getElementById(currentAudioId);
-        const prevBtn = document.getElementById('btn-' + currentAudioId);
-        if (prevAudio) {
-            prevAudio.pause();
-            saveAudioPosition(currentAudioId, prevAudio.currentTime);
-        }
-        if (prevBtn) prevBtn.textContent = '▶';
-    }
+    pauseOtherAudio(audioId);
 
     if (audio.paused) {
-        // RESUME de la poziția salvată (dacă există + e validă)
-        const savedTime = loadAudioPosition(audioId);
-        const tryResume = () => {
-            if (savedTime > 1 && audio.duration && savedTime < audio.duration - 1) {
-                audio.currentTime = savedTime;
-            }
-        };
-        // Dacă metadata nu e încărcată încă, aștept până se încarcă
-        if (audio.readyState >= 1) {
-            tryResume();
-        } else {
-            audio.addEventListener('loadedmetadata', tryResume, { once: true });
-        }
         audio.play().then(() => {
             btn.textContent = '⏸';
             currentAudioId = audioId;
         }).catch(err => {
             console.log('Audio nu poate fi redat:', err);
-            alert('Fișierul audio nu este disponibil. Verifică dacă MP3-ul a fost încărcat în folder.');
+            alert('Fisierul audio nu este disponibil inca. Incearca din nou.');
             btn.textContent = '▶';
         });
     } else {
-        // PAUZĂ — păstrăm poziția în localStorage (NU mai resetăm)
         audio.pause();
-        saveAudioPosition(audioId, audio.currentTime);
         btn.textContent = '▶';
         currentAudioId = null;
     }
 
-    // Când audio se termină, reset poziție + buton
-    audio.onended = function() {
+    audio.onended = function () {
         btn.textContent = '▶';
         currentAudioId = null;
-        clearAudioPosition(audioId);  // a terminat → ștergem poziția
+    };
+}
+
+// Reia de la INCEPUT (buton restart): pozitie 0 + porneste
+function restartAudio(event, audioId) {
+    if (event) event.stopPropagation();
+    const audio = document.getElementById(audioId);
+    const btn = document.getElementById('btn-' + audioId);
+    if (!audio) return;
+    pauseOtherAudio(audioId);
+    audio.currentTime = 0;
+    audio.play().then(() => {
+        if (btn) btn.textContent = '⏸';
+        currentAudioId = audioId;
+    }).catch(() => {});
+    audio.onended = function () {
+        if (btn) btn.textContent = '▶';
+        currentAudioId = null;
     };
 }
 
 // ============================================
-// INIȚIALIZARE AUDIO — timecode vizibil + auto-save la fiecare 3s + beforeunload
+// INIT AUDIO - injecteaza restart + bara de progres + timp + seek (click/drag)
 // ============================================
 function initLessonAudios() {
     document.querySelectorAll('audio[id^="audio-"]').forEach(audio => {
-        // 1. Injectez timecode lângă buton (dacă nu există deja)
         const player = audio.closest('.audio-player');
-        if (player && !player.querySelector('.audio-timecode')) {
-            const tc = document.createElement('span');
-            tc.className = 'audio-timecode';
-            tc.id = 'time-' + audio.id;
-            tc.textContent = '—:—';
-            tc.style.cssText = 'font-size: 0.85rem; color: #5A5147; margin-left: 10px; font-family: \'Courier New\', monospace; font-weight: 600; white-space: nowrap;';
-            player.appendChild(tc);
+        if (!player || player.querySelector('.audio-progress')) return;
+
+        // playerul umple latimea disponibila (bara de progres larga)
+        player.style.flex = '1';
+
+        // durata vizibila + seek posibil inainte de play
+        try { audio.preload = 'metadata'; } catch (e) {}
+
+        // buton RESTART (dupa play), stil brandat
+        const mainBtn = player.querySelector('.audio-btn');
+        const restart = document.createElement('button');
+        restart.type = 'button';
+        restart.className = 'audio-btn audio-restart';
+        restart.textContent = '⏮';
+        restart.title = 'De la inceput';
+        restart.setAttribute('aria-label', 'Reia de la inceput');
+        restart.style.cssText = 'margin-left:6px; font-size:0.8rem;';
+        restart.addEventListener('click', e => restartAudio(e, audio.id));
+        if (mainBtn && mainBtn.parentNode) {
+            mainBtn.parentNode.insertBefore(restart, mainBtn.nextSibling);
         }
 
-        // 2. Update timecode + save position la fiecare 3 secunde de redare
-        let lastSave = -10;
-        audio.addEventListener('timeupdate', () => {
-            const tc = document.getElementById('time-' + audio.id);
-            if (tc) tc.textContent = formatAudioTime(audio.currentTime) + ' / ' + formatAudioTime(audio.duration);
-            if (Math.abs(audio.currentTime - lastSave) >= 3) {
-                saveAudioPosition(audio.id, audio.currentTime);
-                lastSave = audio.currentTime;
-            }
-        });
+        // bara de progres (track + fill + knob)
+        const bar = document.createElement('div');
+        bar.className = 'audio-progress';
+        bar.style.cssText = 'flex:1; height:10px; background:#E7E0D4; border-radius:6px; position:relative; cursor:pointer; margin:0 12px; min-width:70px; touch-action:none;';
+        const fill = document.createElement('div');
+        fill.className = 'audio-progress-fill';
+        fill.style.cssText = 'position:absolute; left:0; top:0; height:100%; width:0%; background:#10B981; border-radius:6px; pointer-events:none;';
+        const knob = document.createElement('div');
+        knob.className = 'audio-progress-knob';
+        knob.style.cssText = 'position:absolute; top:50%; left:0%; width:16px; height:16px; background:#10B981; border:2px solid #ffffff; border-radius:50%; transform:translate(-50%,-50%); box-shadow:0 1px 3px rgba(0,0,0,0.3); pointer-events:none;';
+        bar.appendChild(fill);
+        bar.appendChild(knob);
+        player.appendChild(bar);
 
-        // 3. Când metadata se încarcă (durata disponibilă), afișez și poziția salvată
-        audio.addEventListener('loadedmetadata', () => {
-            const tc = document.getElementById('time-' + audio.id);
-            if (tc) {
-                const savedTime = loadAudioPosition(audio.id);
-                const startTime = (savedTime > 1 && savedTime < audio.duration - 1) ? savedTime : 0;
-                tc.textContent = formatAudioTime(startTime) + ' / ' + formatAudioTime(audio.duration);
-            }
-        });
+        // timp curent / total
+        const tc = document.createElement('span');
+        tc.className = 'audio-timecode';
+        tc.id = 'time-' + audio.id;
+        tc.textContent = '0:00';
+        tc.style.cssText = "font-size:0.85rem; color:#5A5147; font-family:'Courier New', monospace; font-weight:600; white-space:nowrap; min-width:82px; text-align:right;";
+        player.appendChild(tc);
 
-        // 4. Salvează poziția la închiderea tab-ului/navigarea altundeva
-        window.addEventListener('beforeunload', () => {
-            if (!audio.paused) saveAudioPosition(audio.id, audio.currentTime);
+        const updateUI = () => {
+            const d = audio.duration || 0;
+            const pct = d ? (audio.currentTime / d) * 100 : 0;
+            fill.style.width = pct + '%';
+            knob.style.left = pct + '%';
+            tc.textContent = formatAudioTime(audio.currentTime) + ' / ' + formatAudioTime(d);
+        };
+        audio.addEventListener('timeupdate', updateUI);
+        audio.addEventListener('loadedmetadata', updateUI);
+        audio.addEventListener('durationchange', updateUI);
+
+        // SEEK: click/drag oriunde (inceput = restart, oriunde = inainte/inapoi)
+        let dragging = false;
+        const seekTo = clientX => {
+            if (!audio.duration) return;
+            const rect = bar.getBoundingClientRect();
+            let ratio = (clientX - rect.left) / rect.width;
+            ratio = Math.max(0, Math.min(1, ratio));
+            audio.currentTime = ratio * audio.duration;
+            updateUI();
+        };
+        bar.addEventListener('pointerdown', e => {
+            dragging = true;
+            try { bar.setPointerCapture(e.pointerId); } catch (x) {}
+            seekTo(e.clientX);
+        });
+        bar.addEventListener('pointermove', e => { if (dragging) seekTo(e.clientX); });
+        bar.addEventListener('pointerup', e => {
+            dragging = false;
+            try { bar.releasePointerCapture(e.pointerId); } catch (x) {}
         });
     });
 }
 
-// Apel direct — main.js se încarcă DUPĂ DOM (la sfârșitul body-ului)
 if (document.readyState !== 'loading') {
     initLessonAudios();
 } else {
